@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Usage - Energy Monitor{% endblock %}
+
+{% block content %}
+<h1>Usage History</h1>
+
+<form method="GET" class="filter-form">
+    <div class="form-row">
+        <div class="form-group">
+            <label for="start">Start Date</label>
+            <input type="date" id="start" name="start" value="{{ start }}">
+        </div>
+        <div class="form-group">
+            <label for="end">End Date</label>
+            <input type="date" id="end" name="end" value="{{ end }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+</form>
+
+<div class="chart-container">
+    <h2>Daily Usage</h2>
+    <canvas id="dailyChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <h2>Monthly Totals</h2>
+    <canvas id="monthlyTotalChart"></canvas>
+</div>
+
+<h2>Data Table</h2>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>kWh</th>
+            <th>Type</th>
+            <th>A/E</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for rec in records %}
+        <tr>
+            <td>{{ rec.date }}</td>
+            <td>{{ rec.usage_kwh }}</td>
+            <td>{{ rec.reading_type }}</td>
+            <td>{{ rec.actual_estimated }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    const dailyData = {{ daily_data | tojson }};
+    const monthlyData = {{ monthly_data | tojson }};
+    renderDailyChart('dailyChart', dailyData);
+    renderMonthlyChart('monthlyTotalChart', monthlyData);
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Energy Monitor{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Records</h3>
+        <p class="stat-value">{{ total_records }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Date Range</h3>
+        <p class="stat-value">{{ date_range }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Avg Daily Usage</h3>
+        <p class="stat-value">{{ avg_daily_kwh }} kWh</p>
+    </div>
+    <div class="stat-card">
+        <h3>Available Plans</h3>
+        <p class="stat-value">{{ plan_count }}</p>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h2>Monthly Usage Overview</h2>
+    <canvas id="monthlyChart"></canvas>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const monthlyData = {{ monthly_data | tojson }};
+    if (monthlyData && monthlyData.length > 0) {
+        const ctx = document.getElementById('monthlyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: monthlyData.map(d => d.label),
+                datasets: [{
+                    label: 'Monthly kWh',
+                    data: monthlyData.map(d => d.kwh),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'kWh' } }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
