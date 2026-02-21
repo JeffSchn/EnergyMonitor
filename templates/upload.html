@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Upload Data - Energy Monitor{% endblock %}
+
+{% block content %}
+<h1>Upload Usage Data</h1>
+<p>Upload a CSV file exported from
+    <a href="https://www.smartmetertexas.com" target="_blank">Smart Meter Texas</a>.
+    Both daily register reads and 15-minute interval formats are supported.
+</p>
+
+<form method="POST" enctype="multipart/form-data" class="upload-form">
+    <div class="form-group">
+        <label for="csv_file">CSV File</label>
+        <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+    </div>
+
+    <div class="form-group">
+        <label for="file_type">File Type</label>
+        <select id="file_type" name="file_type">
+            <option value="daily">Daily Register Reads</option>
+            <option value="interval">15-Minute Interval Data</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Upload &amp; Import</button>
+</form>
+
+{% if result %}
+<div class="upload-result">
+    <h2>Import Result</h2>
+    <p>Imported <strong>{{ result.imported }}</strong> records
+       ({{ result.skipped }} duplicates skipped).</p>
+</div>
+{% endif %}
+{% endblock %}

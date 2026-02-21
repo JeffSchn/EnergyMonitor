@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Plans - Energy Monitor{% endblock %}
+
+{% block content %}
+<h1>Electricity Plans</h1>
+
+<div class="actions">
+    <form method="POST" action="{{ url_for('fetch_plans') }}" class="inline-form">
+        <div class="form-group">
+            <label for="zip_code">ZIP Code</label>
+            <input type="text" id="zip_code" name="zip_code" placeholder="e.g. 77001"
+                   pattern="[0-9]{5}" maxlength="5">
+        </div>
+        <button type="submit" class="btn btn-primary">Fetch Plans from Power to Choose</button>
+    </form>
+</div>
+
+{% if plans %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Company</th>
+            <th>Plan Name</th>
+            <th>Type</th>
+            <th>Term (mo)</th>
+            <th>500 kWh</th>
+            <th>1000 kWh</th>
+            <th>2000 kWh</th>
+            <th>Renewable</th>
+            <th>Cancel Fee</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for plan in plans %}
+        <tr>
+            <td>{{ plan.company_name }}</td>
+            <td>{{ plan.plan_name }}</td>
+            <td>{{ plan.plan_type }}</td>
+            <td>{{ plan.contract_length or '-' }}</td>
+            <td>{{ plan.price_kwh_500 or '-' }}&#162;</td>
+            <td>{{ plan.price_kwh_1000 or '-' }}&#162;</td>
+            <td>{{ plan.price_kwh_2000 or '-' }}&#162;</td>
+            <td>{{ plan.renewable_pct or '-' }}%</td>
+            <td>${{ plan.cancellation_fee or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No plans loaded yet. Use the form above to fetch current plans.</p>
+{% endif %}
+{% endblock %}

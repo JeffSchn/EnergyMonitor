@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Reprice - Energy Monitor{% endblock %}
+
+{% block content %}
+<h1>Reprice Your Usage</h1>
+<p>See what your historical electricity usage would cost under different plans.</p>
+
+<form method="POST" class="filter-form">
+    <div class="form-row">
+        <div class="form-group">
+            <label for="esiid">ESIID</label>
+            <select id="esiid" name="esiid">
+                {% for e in esiids %}
+                <option value="{{ e }}" {% if e == selected_esiid %}selected{% endif %}>{{ e }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="start">Start Date</label>
+            <input type="date" id="start" name="start" value="{{ start }}">
+        </div>
+        <div class="form-group">
+            <label for="end">End Date</label>
+            <input type="date" id="end" name="end" value="{{ end }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Reprice</button>
+    </div>
+</form>
+
+{% if results %}
+<div class="chart-container">
+    <h2>Cost Comparison</h2>
+    <canvas id="repriceChart"></canvas>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Company</th>
+            <th>Plan Name</th>
+            <th>Type</th>
+            <th>Total Cost</th>
+            <th>Avg Monthly</th>
+            <th>Avg &#162;/kWh</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in results %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ r.plan.company_name }}</td>
+            <td>{{ r.plan.plan_name }}</td>
+            <td>{{ r.plan.plan_type }}</td>
+            <td>${{ r.total_cost }}</td>
+            <td>${{ r.avg_monthly_cost }}</td>
+            <td>{{ r.avg_price_per_kwh }}&#162;</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if results %}
+<script>
+    const repriceData = {{ reprice_chart_data | tojson }};
+    const ctx = document.getElementById('repriceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: repriceData.labels,
+            datasets: [{
+                label: 'Total Estimated Cost ($)',
+                data: repriceData.costs,
+                backgroundColor: repriceData.costs.map((_, i) =>
+                    i === 0 ? 'rgba(75, 192, 192, 0.7)' : 'rgba(54, 162, 235, 0.5)'
+                ),
+                borderColor: repriceData.costs.map((_, i) =>
+                    i === 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(54, 162, 235, 1)'
+                ),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            scales: {
+                x: { beginAtZero: true, title: { display: true, text: 'Total Cost ($)' } }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
