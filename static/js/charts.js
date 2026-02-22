@@ -1,66 +1,83 @@
 /**
  * Reusable Chart.js rendering helpers for the Energy Monitor app.
+ *
+ * CHART_THEME controls every colour / dash-pattern used by the average-line
+ * overlays.  Themed branches only need to swap this object.
  */
 
-function renderDailyChart(canvasId, data, averages) {
-    if (!data || data.length === 0) return;
-    const ctx = document.getElementById(canvasId).getContext('2d');
+const CHART_THEME = {
+    daily: {
+        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+    },
+    monthly: {
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+    },
+    avgOverall: {
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderDash: [6, 4],
+        borderWidth: 2,
+    },
+    avgSummer: {
+        borderColor: 'rgba(255, 159, 64, 1)',
+        borderDash: [8, 4],
+        borderWidth: 2,
+    },
+    avgWinter: {
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderDash: [8, 4],
+        borderWidth: 2,
+    },
+};
 
+function _buildAvgDatasets(labels, averages, mixedType) {
+    const ds = [];
+    if (!averages) return ds;
+
+    const specs = [
+        { key: 'overall', label: 'Overall Avg',          theme: CHART_THEME.avgOverall },
+        { key: 'summer',  label: 'Summer Avg Apr\u2013Sep', theme: CHART_THEME.avgSummer },
+        { key: 'winter',  label: 'Winter Avg Oct\u2013Mar', theme: CHART_THEME.avgWinter },
+    ];
+
+    for (const s of specs) {
+        const val = averages[s.key];
+        if (val === null || val === undefined) continue;
+        const entry = {
+            label: `${s.label} (${val.toFixed(1)} kWh)`,
+            data: Array(labels.length).fill(val),
+            borderColor: s.theme.borderColor,
+            borderDash: s.theme.borderDash,
+            borderWidth: s.theme.borderWidth,
+            pointRadius: 0,
+            fill: false,
+            tension: 0,
+            order: 1,
+        };
+        if (mixedType) entry.type = 'line';
+        ds.push(entry);
+    }
+    return ds;
+}
+
+function renderDailyChart(canvasId, data, averages) {
+    if (!data || data.length === 0) return null;
+    const ctx = document.getElementById(canvasId).getContext('2d');
     const labels = data.map(d => d.date);
+
     const datasets = [{
         label: 'Daily kWh',
         data: data.map(d => d.kwh),
-        borderColor: 'rgba(54, 162, 235, 1)',
-        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+        borderColor: CHART_THEME.daily.borderColor,
+        backgroundColor: CHART_THEME.daily.backgroundColor,
         fill: true,
         tension: 0.3,
         pointRadius: 1,
         order: 2,
-    }];
+    }, ..._buildAvgDatasets(labels, averages, false)];
 
-    if (averages) {
-        if (averages.overall !== null) {
-            datasets.push({
-                label: `Overall Avg (${averages.overall.toFixed(1)} kWh)`,
-                data: Array(labels.length).fill(averages.overall),
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderDash: [6, 4],
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false,
-                tension: 0,
-                order: 1,
-            });
-        }
-        if (averages.summer !== null) {
-            datasets.push({
-                label: `Summer Avg Apr–Sep (${averages.summer.toFixed(1)} kWh)`,
-                data: Array(labels.length).fill(averages.summer),
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderDash: [8, 4],
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false,
-                tension: 0,
-                order: 1,
-            });
-        }
-        if (averages.winter !== null) {
-            datasets.push({
-                label: `Winter Avg Oct–Mar (${averages.winter.toFixed(1)} kWh)`,
-                data: Array(labels.length).fill(averages.winter),
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderDash: [8, 4],
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false,
-                tension: 0,
-                order: 1,
-            });
-        }
-    }
-
-    new Chart(ctx, {
+    return new Chart(ctx, {
         type: 'line',
         data: { labels, datasets },
         options: {
@@ -68,75 +85,33 @@ function renderDailyChart(canvasId, data, averages) {
             scales: {
                 x: {
                     title: { display: true, text: 'Date' },
-                    ticks: { maxTicksLimit: 20 }
+                    ticks: { maxTicksLimit: 20 },
                 },
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'kWh' }
-                }
-            }
-        }
+                    title: { display: true, text: 'kWh' },
+                },
+            },
+        },
     });
 }
 
 function renderMonthlyChart(canvasId, data, averages) {
-    if (!data || data.length === 0) return;
+    if (!data || data.length === 0) return null;
     const ctx = document.getElementById(canvasId).getContext('2d');
-
     const labels = data.map(d => d.label);
+
     const datasets = [{
         type: 'bar',
         label: 'Monthly kWh',
         data: data.map(d => d.kwh),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: CHART_THEME.monthly.backgroundColor,
+        borderColor: CHART_THEME.monthly.borderColor,
         borderWidth: 1,
         order: 2,
-    }];
+    }, ..._buildAvgDatasets(labels, averages, true)];
 
-    if (averages) {
-        if (averages.overall !== null) {
-            datasets.push({
-                type: 'line',
-                label: `Overall Avg (${averages.overall.toFixed(1)} kWh)`,
-                data: Array(labels.length).fill(averages.overall),
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderDash: [6, 4],
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false,
-                order: 1,
-            });
-        }
-        if (averages.summer !== null) {
-            datasets.push({
-                type: 'line',
-                label: `Summer Avg Apr–Sep (${averages.summer.toFixed(1)} kWh)`,
-                data: Array(labels.length).fill(averages.summer),
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderDash: [8, 4],
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false,
-                order: 1,
-            });
-        }
-        if (averages.winter !== null) {
-            datasets.push({
-                type: 'line',
-                label: `Winter Avg Oct–Mar (${averages.winter.toFixed(1)} kWh)`,
-                data: Array(labels.length).fill(averages.winter),
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderDash: [8, 4],
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false,
-                order: 1,
-            });
-        }
-    }
-
-    new Chart(ctx, {
+    return new Chart(ctx, {
         type: 'bar',
         data: { labels, datasets },
         options: {
@@ -144,9 +119,9 @@ function renderMonthlyChart(canvasId, data, averages) {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'kWh' }
-                }
-            }
-        }
+                    title: { display: true, text: 'kWh' },
+                },
+            },
+        },
     });
 }
