@@ -7,26 +7,26 @@
 
 const CHART_THEME = {
     daily: {
-        borderColor: 'rgba(54, 162, 235, 1)',
-        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+        borderColor: '#A0522D',
+        backgroundColor: 'rgba(160, 82, 45, 0.1)',
     },
     monthly: {
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(107, 142, 35, 0.55)',
+        borderColor: '#6B8E23',
     },
     avgOverall: {
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderDash: [6, 4],
-        borderWidth: 2,
+        borderColor: '#8B4513',
+        borderDash: [4, 4],
+        borderWidth: 2.5,
     },
     avgSummer: {
-        borderColor: 'rgba(255, 159, 64, 1)',
-        borderDash: [8, 4],
+        borderColor: '#DAA520',
+        borderDash: [6, 6],
         borderWidth: 2,
     },
     avgWinter: {
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderDash: [8, 4],
+        borderColor: '#2E8B57',
+        borderDash: [6, 6],
         borderWidth: 2,
     },
 };
