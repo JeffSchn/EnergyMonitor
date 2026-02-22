@@ -178,30 +178,32 @@ body {
 
 .avg-toggle {
     display: flex;
-    border-radius: 6px;
-    overflow: hidden;
-    border: 1px solid #cbd5e0;
+    gap: 0.5rem;
+    border: none;
 }
 
 .btn-toggle {
-    padding: 0.4rem 1rem;
-    border: none;
-    border-radius: 0;
-    background: #fff;
-    color: #4a5568;
-    font-size: 0.85rem;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    background: transparent;
+    color: #6B7280;
+    font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: border-color 0.15s, color 0.15s;
 }
 
 .btn-toggle:hover {
-    background: #edf2f7;
+    border-color: #9CA3AF;
+    color: #374151;
 }
 
 .btn-toggle.active {
-    background: #3182ce;
-    color: #fff;
+    background: transparent;
+    color: #111827;
+    border-color: #111827;
+    font-weight: 600;
 }
 
 /* === Tables === */
