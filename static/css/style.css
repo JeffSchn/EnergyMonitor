@@ -162,6 +162,48 @@ body {
     background: #2b6cb0;
 }
 
+/* === Average Basis Toggle === */
+.avg-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.avg-toggle-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.avg-toggle {
+    display: flex;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #cbd5e0;
+}
+
+.btn-toggle {
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 0;
+    background: #fff;
+    color: #4a5568;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.btn-toggle:hover {
+    background: #edf2f7;
+}
+
+.btn-toggle.active {
+    background: #3182ce;
+    color: #fff;
+}
+
 /* === Tables === */
 .data-table {
     width: 100%;

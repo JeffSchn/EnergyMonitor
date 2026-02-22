@@ -18,6 +18,16 @@
     </div>
 </form>
 
+<div class="avg-toggle-container">
+    <span class="avg-toggle-label">Average Basis:</span>
+    <div class="avg-toggle">
+        <button type="button" class="btn btn-toggle active" id="btnDaily"
+                onclick="switchAvgMode('daily')">Daily</button>
+        <button type="button" class="btn btn-toggle" id="btnMonthly"
+                onclick="switchAvgMode('monthly')">Monthly</button>
+    </div>
+</div>
+
 <div class="chart-container">
     <h2>Daily Usage</h2>
     <canvas id="dailyChart"></canvas>
@@ -54,45 +64,80 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script>
-    const dailyData = {{ daily_data | tojson }};
+    const dailyData  = {{ daily_data  | tojson }};
     const monthlyData = {{ monthly_data | tojson }};
 
+    let dailyChart  = null;
+    let monthlyChart = null;
+
+    /* ---- helpers ---- */
     function computeAvg(values) {
         return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
     }
+    function isSummerMonth(m) { return m >= 4 && m <= 9; }
 
-    function isSummerMonth(month) {
-        // Summer: April (4) through September (9)
-        return month >= 4 && month <= 9;
-    }
-
-    // Compute daily averages (overall, summer, winter) from raw daily records.
-    // Month is parsed directly from the date string to avoid timezone shifts.
-    const dailyAvgs = (function() {
-        if (!dailyData || dailyData.length === 0) return null;
-        const summer = dailyData.filter(d => isSummerMonth(parseInt(d.date.split('-')[1])));
-        const winter = dailyData.filter(d => !isSummerMonth(parseInt(d.date.split('-')[1])));
+    /* Daily basis: average of individual daily kWh readings */
+    function computeDailyBasis() {
+        if (!dailyData || !dailyData.length) return null;
+        const getM = d => parseInt(d.date.split('-')[1]);
+        const summer = dailyData.filter(d => isSummerMonth(getM(d)));
+        const winter = dailyData.filter(d => !isSummerMonth(getM(d)));
         return {
             overall: computeAvg(dailyData.map(d => d.kwh)),
-            summer: computeAvg(summer.map(d => d.kwh)),
-            winter: computeAvg(winter.map(d => d.kwh)),
+            summer:  computeAvg(summer.map(d => d.kwh)),
+            winter:  computeAvg(winter.map(d => d.kwh)),
         };
-    })();
+    }
 
-    // Compute monthly averages from aggregated monthly totals.
-    // Labels are "YYYY-MM" strings.
-    const monthlyAvgs = (function() {
-        if (!monthlyData || monthlyData.length === 0) return null;
-        const summer = monthlyData.filter(d => isSummerMonth(parseInt(d.label.split('-')[1])));
-        const winter = monthlyData.filter(d => !isSummerMonth(parseInt(d.label.split('-')[1])));
+    /* Monthly basis: average of monthly totals */
+    function computeMonthlyBasis() {
+        if (!monthlyData || !monthlyData.length) return null;
+        const getM = d => parseInt(d.label.split('-')[1]);
+        const summer = monthlyData.filter(d => isSummerMonth(getM(d)));
+        const winter = monthlyData.filter(d => !isSummerMonth(getM(d)));
         return {
             overall: computeAvg(monthlyData.map(d => d.kwh)),
-            summer: computeAvg(summer.map(d => d.kwh)),
-            winter: computeAvg(winter.map(d => d.kwh)),
+            summer:  computeAvg(summer.map(d => d.kwh)),
+            winter:  computeAvg(winter.map(d => d.kwh)),
         };
-    })();
+    }
 
-    renderDailyChart('dailyChart', dailyData, dailyAvgs);
-    renderMonthlyChart('monthlyTotalChart', monthlyData, monthlyAvgs);
+    const AVG_DAYS_PER_MONTH = 30.44;
+
+    function scaleAvgs(avgs, factor) {
+        if (!avgs) return null;
+        return {
+            overall: avgs.overall !== null ? avgs.overall * factor : null,
+            summer:  avgs.summer  !== null ? avgs.summer  * factor : null,
+            winter:  avgs.winter  !== null ? avgs.winter  * factor : null,
+        };
+    }
+
+    /* ---- toggle handler ---- */
+    function switchAvgMode(mode) {
+        if (dailyChart)   { dailyChart.destroy();   dailyChart  = null; }
+        if (monthlyChart) { monthlyChart.destroy(); monthlyChart = null; }
+
+        let dailyAvgs, monthlyAvgs;
+
+        if (mode === 'daily') {
+            const basis = computeDailyBasis();
+            dailyAvgs   = basis;
+            monthlyAvgs = scaleAvgs(basis, AVG_DAYS_PER_MONTH);
+        } else {
+            const basis = computeMonthlyBasis();
+            monthlyAvgs = basis;
+            dailyAvgs   = scaleAvgs(basis, 1 / AVG_DAYS_PER_MONTH);
+        }
+
+        dailyChart   = renderDailyChart('dailyChart', dailyData, dailyAvgs);
+        monthlyChart = renderMonthlyChart('monthlyTotalChart', monthlyData, monthlyAvgs);
+
+        document.getElementById('btnDaily').classList.toggle('active', mode === 'daily');
+        document.getElementById('btnMonthly').classList.toggle('active', mode === 'monthly');
+    }
+
+    /* initialise with daily basis */
+    switchAvgMode('daily');
 </script>
 {% endblock %}
